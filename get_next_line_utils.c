@@ -49,6 +49,8 @@ size_t	ft_strlcat(char *dst, const char *src, size_t size)
 	return (save_ltotal);
 }
 
+
+// join two string
 char	*ft_strjoin(char const *s1, char const *s2)
 {
 	char	*new_string;

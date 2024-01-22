@@ -1,69 +1,97 @@
+#include <fcntl.h>
 #include <unistd.h>
-#include <stdio.h>
-#include "get_next_line.h"
-#include <string.h>
+#include <get_next_line.h>
 
-// WARNING: LIBFT, LSEEK AND GLOBAL VARIBALE FORBIDDEN
+//I have to free the static store var using a specific function
 
-void	*ft_memset(void *s, int c, size_t n)
+int	free_tail(char *tail, char *head)
 {
-	size_t			i;
-	unsigned char	*s_cp;
 
-	s_cp = s;
-	i = 0;
-	while (i < n)
-	{
-		*(s_cp + i) = (unsigned char) c;
-		i++;
-	}
-	return (s);
+
 }
 
-void	collect_line(int fd, char* save_buff, char *line)
+void	handle_nl(char *buffer, char *tail, char *head)
 {
-	char 	*buff;
-	int	i;
-	int 	checker;
-	int	lenght;
+	int	head_len;
+	int tail_len;
 
-	buff = malloc(BUFFER_SIZE + 1);
-	checker = 0;
-	while (checker == 0)
-	{
-		lenght = read(fd, buff, BUFFER_SIZE);
-		buff[lenght] = '\0';
-		if (lenght == 0)
-			break;
-		i = 0;
-		while (buff[i] != '\n' && buff[i])
-			i++;
-		if (buff[i] == '\n')
-		{
-			ft_memset(buff + i, 0, ft_strlen(buff + i));
-			checker = 1;
-		}
-		ft_strjoin(line, buff);
-	}
-	// add a return
+	tail_len = ft_strlen(head) - (int) (ft_strchr(head, '\n') - head);
+	head_len = ft_strlen(head) - tail_len;
+	head = malloc(head_len + 1);
+	tail = malloc(tail_len + 1);
+	ft_strlcpy(head, buffer, head_len);
+	ft_strlcpy(tail, buffer, tail_len);
+	head[head_len + 1] = '\0';
+	tail[head_len + tail_len + 1] = '\0';
 }
 
-char *get_next_line(int fd)
+int	catch_buffer(int fd, char *tail, char *head)
 {
-	static char* 	save_buff =  NULL;
-	char* 		line;
+	int		end_tester;
+	int		buffer_len;
+	char	*buffer;
+	
+	// LAUNCH THE CONDITION / THE FUNCTION USING THE TAIL
 
-	free(line);
-	collect_line(fd, save_buff, line);
+
+	buffer = malloc(BUFFER_SIZE + 1);
+	end_tester = read(fd, buffer, BUFFER_SIZE);
+	buffer_len = ft_strlen(buffer);
+
+	// handle full copy : basic no new_line in text AND same with end
+	if (ft_strchr(buffer, '\n') == 0)
+	{
+		head = malloc(BUFFER_SIZE + 1);
+		ft_strlcpy(head, buffer, buffer_len);
+		head[buffer_len + 1] = '\0';
+	}
+	// handle new_line case
+	else
+	{
+		handle_nl(buffer, tail, head);
+		return (1);
+	}
+	// return one if the function is end
+	if (buffer_len < BUFFER_SIZE)
+		return (1);
+	return (0);
+}
+
+// It's possible that I need to empty the string line
+char	*get_next_line(int fd)
+{
+	int			end;
+	char		*line;
+	char		*head;
+	static char	*tail;
+
+	if (BUFFER_SIZE <= 0 || fd < 0)
+		return (NULL);
+	// if tail is empty
+	end = 0;
+	if (tail != NULL)
+	{
+		end = free_tail(tail);
+		ft_strjoin(line, head);
+		free(head);
+	}
+	// until end of buffer or new_line
+	while (end != 1)
+	{
+		end = catch_buffer(fd, tail, head);
+		ft_strjoin(line, head);
+		free(head);
+	}
+	//free the buffer everytime
 	return (line);
 }
 
-#include <fcntl.h>
-#include <unistd.h>
+// launch the function using: cc -Wall -Wextra -Werror -D BUFFER_SIZE=42 <files>.c
 int	main(void)
 {
-	int fd1 = open("test.txt", O_RDONLY);
-	char	*test1 = get_next_line(fd1);
-	char	*test2 = get_next_line(fd1);
+	int	fd;
+	
+	fd = open("test.txt", O_RDONLY);
+	get_next_line(fd);
 	return (0);
 }
