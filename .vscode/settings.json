@@ -1,5 +1,14 @@
 {
 	"files.associations": {
-		"unistd.h": "c"
+		"unistd.h": "c",
+		"array": "c",
+		"deque": "c",
+		"string": "c",
+		"unordered_map": "c",
+		"vector": "c",
+		"string_view": "c",
+		"initializer_list": "c",
+		"ranges": "c",
+		"span": "c"
 	}
 }
