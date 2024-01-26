@@ -1,13 +1,14 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include "get_next_line.h"
+#include <stdio.h>
 
 void	handle_nl(char *buffer, char *tail, char *head)
 {
 	int	head_len;
 	int	tail_len;
 
-	tail_len = ft_strlen(buffer) - (int)(ft_strchr(buffer, '\n') - buffer);
+	tail_len = ft_strlen(buffer) - (int)(ft_strchr(buffer, '\n') - buffer) - 1;
 	head_len = ft_strlen(buffer) - tail_len;
 	head = malloc(head_len + 1);
 	if (head == NULL)
@@ -16,9 +17,11 @@ void	handle_nl(char *buffer, char *tail, char *head)
 	if (tail == NULL)
 		return;
 	ft_strlcpy(head, buffer, head_len);
-	ft_strlcpy(tail, buffer, tail_len);
-	head[head_len + 1] = '\0';
-	tail[head_len + tail_len + 1] = '\0';
+	ft_strlcpy(tail, buffer + head_len, tail_len);
+	head[head_len] = '\0';
+	tail[tail_len] = '\0';
+	//free(head); // do I free?
+	free(tail); // do I free?
 }
 
 int	free_tail(char *tail, char *head, int *end_line)
@@ -50,15 +53,14 @@ int	free_tail(char *tail, char *head, int *end_line)
 
 int	catch_buffer(int fd, char *tail, char *head, int *end_line)
 {
-	int		end_tester;
 	int		buffer_len;
 	char	*buffer;
 
 	buffer = malloc(BUFFER_SIZE + 1);
 	if (buffer == NULL)
 		return (0);
-	end_tester = read(fd, buffer, BUFFER_SIZE);
-	buffer_len = ft_strlen(buffer);
+	buffer_len = read(fd, buffer, BUFFER_SIZE);
+	buffer[buffer_len] = '\0';
 	// handle full copy : basic no new_line in text AND same with end
 	if (ft_strchr(buffer, '\n') == 0)
 	{
@@ -66,16 +68,18 @@ int	catch_buffer(int fd, char *tail, char *head, int *end_line)
 		if (head == NULL)
 			return (*end_line = 0);
 		ft_strlcpy(head, buffer, buffer_len);
-		head[buffer_len + 1] = '\0';
+		head[buffer_len] = '\0';
 	}
 	// handle new_line case
 	else
 	{
 		handle_nl(buffer, tail, head);
+		free(buffer); // do I add that?
 		return (*end_line = 1);
 	}
+	free(buffer); // do I add that?
 	// return one if the function is end
-	if (end_tester < BUFFER_SIZE)
+	if (buffer_len < BUFFER_SIZE)
 		return (*end_line = 1); //is it an int?
 	return (*end_line = 0);
 }
@@ -92,10 +96,10 @@ char	*get_next_line(int fd)
 		return (NULL);
 	// if tail is empty
 	end_line = 0;
+	head = NULL; // Pointer 
+	line = NULL;
 	if (tail != NULL)
 	{
-		head = NULL; // is it possible to handle this error using another method?
-		line = NULL; // is it possible to handle this error using another method?
 		free_tail(tail, head, &end_line);
 		ft_strjoin(line, head);
 		free(head);
@@ -110,12 +114,13 @@ char	*get_next_line(int fd)
 	return (line);
 }
 
-// launch the function using: cc -Wall -Wextra -Werror -D BUFFER_SIZE=42 <files>.c
+// launch the function using: cc -Wall -Wextra -Werror -D BUFFER_SIZE=42 get_next_line.c get_next_line_utils.c
+#include <stdio.h>
 int	main(void)
 {
 	int	fd;
 
 	fd = open("test.txt", O_RDONLY);
-	get_next_line(fd);
+	printf("%s\n", get_next_line(fd));
 	return (0);
 }
