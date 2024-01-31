@@ -3,124 +3,144 @@
 #include "get_next_line.h"
 #include <stdio.h>
 
-void	handle_nl(char *buffer, char *tail, char *head)
+static char	*get_head(char* s)
 {
-	int	head_len;
-	int	tail_len;
+	char	*str_output;
+	int		len_output;
 
-	tail_len = ft_strlen(buffer) - (int)(ft_strchr(buffer, '\n') - buffer) - 1;
-	head_len = ft_strlen(buffer) - tail_len;
-	head = malloc(head_len + 1);
-	if (head == NULL)
-		return;
-	tail = malloc(tail_len + 1);
-	if (tail == NULL)
-		return;
-	ft_strlcpy(head, buffer, head_len);
-	ft_strlcpy(tail, buffer + head_len, tail_len);
-	head[head_len] = '\0';
-	tail[tail_len] = '\0';
-	//free(head); // do I free?
-	free(tail); // do I free?
-}
-
-int	free_tail(char *tail, char *head, int *end_line)
-{
-	char	*store_tail;
-	int		len_store_tail;
-
-	store_tail = malloc(ft_strlen(tail) + 1);
-	if (store_tail == NULL)
-		return (0);
-	ft_strlcpy(store_tail, tail, ft_strlen(tail));
-	free(tail);
-	len_store_tail = ft_strlen(store_tail);
-	if (ft_strchr(store_tail, '\n') == 0)
-	{
-		head = malloc(BUFFER_SIZE + 1);
-		if (head == NULL)
-			return (0);
-		ft_strlcpy(head, store_tail, len_store_tail);
-		head[len_store_tail] = '\0';
-	}
+	if (ft_strchr(s, '\n') == 0)
+		len_output = ft_strlen(s) + 1;
 	else
-	{
-		handle_nl(store_tail, tail, head);
-		return (*end_line = 1);
-	}
-	return (*end_line = 0);
-}
+		len_output = ft_strchr(s, '\n') - s + 2; //handle null char 6 + 1
 
-int	catch_buffer(int fd, char *tail, char *head, int *end_line)
-{
-	int		buffer_len;
-	char	*buffer;
-
-	buffer = malloc(BUFFER_SIZE + 1);
-	if (buffer == NULL)
+	if (len_output == 0)
 		return (0);
-	buffer_len = read(fd, buffer, BUFFER_SIZE);
-	buffer[buffer_len] = '\0';
-	// handle full copy : basic no new_line in text AND same with end
-	if (ft_strchr(buffer, '\n') == 0)
-	{
-		head = malloc(BUFFER_SIZE + 1);
-		if (head == NULL)
-			return (*end_line = 0);
-		ft_strlcpy(head, buffer, buffer_len);
-		head[buffer_len] = '\0';
-	}
-	// handle new_line case
-	else
-	{
-		handle_nl(buffer, tail, head);
-		free(buffer); // do I add that?
-		return (*end_line = 1);
-	}
-	free(buffer); // do I add that?
-	// return one if the function is end
-	if (buffer_len < BUFFER_SIZE)
-		return (*end_line = 1); //is it an int?
-	return (*end_line = 0);
+
+	str_output = malloc(len_output);
+	if (str_output == NULL)
+		return (0);
+	ft_strlcpy(str_output, s, len_output); // handle the new line
+	return (str_output);
 }
 
-// It's possible that I need to empty the string line
-char	*get_next_line(int fd)
+char	*get_tail(char *s)
 {
-	int			end_line;
-	char		*line;
-	char		*head;
-	static char	*tail;
-
-	if (BUFFER_SIZE <= 0 || fd < 0)
+	char	*str_output;
+	int		len_output;
+	
+	if (ft_strchr(s, '\n') == 0)
 		return (NULL);
-	// if tail is empty
-	end_line = 0;
-	head = NULL; // Pointer 
-	line = NULL;
-	if (tail != NULL)
+	len_output = ft_strlen(ft_strchr(s, '\n') + 1) + 1;
+	str_output = malloc(len_output);
+	if (str_output == NULL)
+		return (0);
+	ft_strlcpy(str_output, ft_strchr(s, '\n') + 1, len_output + 1); // handle the nl
+	return (str_output);
+}
+
+// if there are a tail, is it handle?
+char	*free_tail(char **tail)
+{
+	char	*line;
+	char	*save;
+
+	printf("Tail value: %sokok \n", *tail);
+	if (ft_strchr(*tail, '\n') == 0)
 	{
-		free_tail(tail, head, &end_line);
-		ft_strjoin(line, head);
-		free(head);
+		line = malloc(ft_strlen(*tail) + 1);
+		if (line == NULL)
+			return (0);
+		ft_strlcpy(line, *tail, ft_strlen(*tail) + 1);
+		free (*tail);
 	}
-	// until end of buffer or new_line
-	while (end_line != 1)
+	else
 	{
-		catch_buffer(fd, tail, head, &end_line);
-		ft_strjoin(line, head);
-		free(head);
+		line = get_head(*tail);
+		save = malloc(ft_strlen(*tail) + 1);
+		if (save == NULL)
+			return (0);
+		ft_strlcpy(save, *tail, ft_strlen(*tail) + 1);
+		free (*tail);
+		*tail = get_tail(save);
+		free (save);
 	}
 	return (line);
 }
 
-// launch the function using: cc -Wall -Wextra -Werror -D BUFFER_SIZE=42 get_next_line.c get_next_line_utils.c
-#include <stdio.h>
+// if there are nothing to read return NULL
+char	*get_next_line(int fd)
+{
+	int			buffer_len;
+	char		*buffer;
+	char		*line;
+	static char	*tail = NULL;
+
+	printf("Tail value: %sokok\n", tail);
+	if (BUFFER_SIZE <= 0 || fd < 0)
+		return (NULL);
+	line = NULL;
+	buffer_len = BUFFER_SIZE;
+	if (tail != NULL)
+		line = free_tail(&tail);
+	while (buffer_len == BUFFER_SIZE && ft_strchr(line, '\n') == 0)
+	{
+		buffer = malloc(BUFFER_SIZE + 1); // perhaps I can remove that of the loop
+		if (buffer == NULL)
+			return (0);
+		buffer_len = read(fd, buffer, BUFFER_SIZE);
+		if (buffer_len == 0 && line != NULL)
+			return (line);
+		else if (buffer_len == 0)
+			return (NULL);
+		buffer[buffer_len] = '\0';
+		tail = get_tail(buffer);
+		// create a function to handle line
+		if (line == NULL)
+			line = get_head(buffer);
+		else
+			line = ft_strjoin(line, get_head(buffer));
+		free (buffer);
+	}
+	printf("tail value: %s\n", tail);
+	return (line);
+}
+
+// cc -Wall -Wextra -Werror -D BUFFER_SIZE=42 get_next_line.c get_next_line_utils.c -g
+// prb: cc -Wall -Wextra -Werror -D BUFFER_SIZE=100 get_next_line.c get_next_line_utils.c -g
 int	main(void)
 {
 	int	fd;
+	char *str;
 
 	fd = open("test.txt", O_RDONLY);
-	printf("%s\n", get_next_line(fd));
+	str = get_next_line(fd);
+	printf("1 %s", str);
+	free(str);
+
+	str = get_next_line(fd);
+	printf("2 %s", str);
+	free(str);
+
+	str = get_next_line(fd);
+	printf("3 %s", str);
+	free(str);
+
+	str = get_next_line(fd);
+	printf("4 %s", str);
+	free(str);
+
+	str = get_next_line(fd);
+	printf("5 %s", str);
+	free(str);
+
+	/*while (1)
+	{
+		str = get_next_line(fd);
+		if (str)
+			printf("%s", str);
+		else 
+			break;
+		free(str);
+	}*/
 	return (0);
 }

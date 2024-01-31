@@ -1,4 +1,5 @@
 #include "get_next_line.h"
+#include <stdio.h>
 
 size_t	ft_strlen(const char *s)
 {
@@ -10,6 +11,7 @@ size_t	ft_strlen(const char *s)
 	return (i);
 }
 
+// add the null char
 size_t	ft_strlcpy(char *dst, const char *src, size_t size)
 {
 	size_t	i;
@@ -66,14 +68,14 @@ char	*ft_strjoin(char const *s1, char const *s2)
 	return (new_string);
 }
 
-#include <stdio.h>
 char	*ft_strchr(const char *s, int c)
 {
 	int	i;
 
+	if (s == NULL) // add
+		return (0); // add
 	i = 0;
-	s++;
-	s++;
+	printf("IN STRCHR: %s", s);
 	while (s[i])
 	{
 		if (s[i] == (unsigned char) c)
