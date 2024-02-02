@@ -75,7 +75,6 @@ char	*ft_strchr(const char *s, int c)
 	if (s == NULL) // add
 		return (0); // add
 	i = 0;
-	printf("IN STRCHR: %s", s);
 	while (s[i])
 	{
 		if (s[i] == (unsigned char) c)
