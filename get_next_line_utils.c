@@ -1,5 +1,16 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   get_next_line_utils.c                              :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: mbriand <marvin@42.fr>                     +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/02/08 14:35:40 by mbriand           #+#    #+#             */
+/*   Updated: 2024/02/08 14:47:52 by mbriand          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "get_next_line.h"
-#include <stdio.h>
 
 size_t	ft_strlen(const char *s)
 {
@@ -11,7 +22,6 @@ size_t	ft_strlen(const char *s)
 	return (i);
 }
 
-// add the null char
 size_t	ft_strlcpy(char *dst, const char *src, size_t size)
 {
 	size_t	i;
@@ -51,8 +61,7 @@ size_t	ft_strlcat(char *dst, const char *src, size_t size)
 	return (save_ltotal);
 }
 
-// join two string
-char	*ft_strjoin(char const *s1, char const *s2)
+char	*ft_strjoin(char *s1, char *s2)
 {
 	char	*new_string;
 	int		lnew_string;
@@ -64,7 +73,9 @@ char	*ft_strjoin(char const *s1, char const *s2)
 	if (new_string == NULL)
 		return (NULL);
 	ft_strlcpy(new_string, s1, ft_strlen(s1) + 1);
+	free (s1);
 	ft_strlcat(new_string, s2, lnew_string);
+	free (s2);
 	return (new_string);
 }
 
@@ -72,8 +83,8 @@ char	*ft_strchr(const char *s, int c)
 {
 	int	i;
 
-	if (s == NULL) // add
-		return (0); // add
+	if (s == NULL)
+		return (0);
 	i = 0;
 	while (s[i])
 	{
