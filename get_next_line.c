@@ -6,12 +6,13 @@
 /*   By: mbriand <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/02/08 14:35:26 by mbriand           #+#    #+#             */
-/*   Updated: 2024/02/08 14:58:43 by mbriand          ###   ########.fr       */
+/*   Updated: 2024/02/08 15:16:07 by mbriand          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
+// Extracts string up to newline or end; allocates memory.
 static char	*get_head(char *s)
 {
 	char	*str_output;
@@ -32,6 +33,7 @@ static char	*get_head(char *s)
 	return (str_output);
 }
 
+// Returns string after newline; frees input if specified.
 static char	*get_tail(char *s, int i)
 {
 	char	*str_output;
@@ -58,6 +60,7 @@ static char	*get_tail(char *s, int i)
 	return (str_output);
 }
 
+// Frees memory based on newline presence and buffer_len condition.
 static void	free_str(char *line, char *tail, char *buffer, int buffer_len)
 {
 	if (buffer_len == -1)
@@ -72,6 +75,7 @@ static void	free_str(char *line, char *tail, char *buffer, int buffer_len)
 	}
 }
 
+// Appends buffer to line; handles line initialization.
 static char	*fill_line(char *line, char *buffer, int buffer_len)
 {
 	buffer[buffer_len] = '\0';
@@ -82,6 +86,7 @@ static char	*fill_line(char *line, char *buffer, int buffer_len)
 	return (line);
 }
 
+// Reads line from file descriptor; manages memory and tail buffer.
 char	*get_next_line(int fd)
 {
 	int			buffer_len;
